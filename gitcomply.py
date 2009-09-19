@@ -54,7 +54,7 @@ class GitComply:
         self.repos = []
         logger.debug( "Directory: %s" % args.directory )
         if self.args.directory:
-            self.dir = os.getcwd()
+            self.dir = args.directory
         else:
             self.dir = os.getcwd()
 
