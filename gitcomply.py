@@ -80,16 +80,9 @@ class GitComply:
         repo: %(repo)s -- type: %(type)s -- file: %(filename)
         """
         file_lines = ""
-#        for warning in self.warnings:
-#            values = {'repo': warning.repo,
-#                       'type': warning.type,
-#                       'filename': warning.filename}
-#             status_logger.debug(warning.repo)
-#             status_logger.debug(warning.type)
-#             status_logger.debug(warning.filename)
-#             file_lines += file_tpl % values
-        self.report = warnings_tpl
-
+        for warning in self.warnings:
+            file_lines += warning.repo
+        self.report = warnings_tpl % file_lines
         return self.report
 
 
