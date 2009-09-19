@@ -9,6 +9,20 @@ import os
 import unittest
 import argparse
 
+# Define logging behaviour
+logger = logging.getLogger( 'search' )
+logformat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+formatter = logging.Formatter( logformat )
+logger.setLevel( logging.DEBUG )
+fh = logging.FileHandler( '.gitcomply.log' )
+fh.setLevel( logging.ERROR )
+fh.setFormatter( formatter )
+ch = logging.StreamHandler()
+ch.setLevel( logging.DEBUG )
+ch.setFormatter( formatter )
+logger.addHandler( fh )
+logger.addHandler( ch )
+
 class GitComply:
     "Checks for files etc"
 
@@ -38,6 +52,7 @@ class GitComply:
         self.config = { 'email': config.get( 'admin', 'email' ) }
         self.args = args
         self.repos = []
+        logger.debug( "Directory: %s" % args.directory )
         if self.args.directory:
             self.dir = os.getcwd()
         else:
