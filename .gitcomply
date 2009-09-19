@@ -1,3 +1,6 @@
 [admin]
 email = il.livid.dream@gmail.com
 
+[env]
+mailserver = localhost
+

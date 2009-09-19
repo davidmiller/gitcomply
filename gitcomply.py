@@ -7,7 +7,9 @@ import ConfigParser
 import logging
 import os
 import re
+import smtplib
 import subprocess
+import sys
 import argparse
 
 # Define logging behaviour
@@ -33,6 +35,7 @@ status_logger.addHandler( ch )
 class GitComply:
     "Checks for files etc"
 
+
     def search( self ):
         """Searches for git repos"""
         if self.args.recursive:
@@ -49,6 +52,7 @@ class GitComply:
 
 
     def status( self ):
+        """Gets the status of the git repos & returns warnings"""
         for repo in self.repos:
             os.chdir( repo )
             status_cmd = [ 'git', 'status' ]
@@ -66,7 +70,31 @@ class GitComply:
         return self.warnings
 
 
+    def report( self ):
+        """Generates report of warning cases"""
+        warnings_tpl = """
+        Uncommitted files found!
+        %s
+        """
+        file_tpl = """
+        repo: %(repo)s -- type: %(type)s -- file: %(filename)
+        """
+        file_lines = ""
+#        for warning in self.warnings:
+#            values = {'repo': warning.repo,
+#                       'type': warning.type,
+#                       'filename': warning.filename}
+#             status_logger.debug(warning.repo)
+#             status_logger.debug(warning.type)
+#             status_logger.debug(warning.filename)
+#             file_lines += file_tpl % values
+        self.report = warnings_tpl
+
+        return self.report
+
+
     def __init__( self, args ):
+        self.args = args
         config = ConfigParser.RawConfigParser()
         if args.configfile:
             config_location = args.configfile
@@ -74,8 +102,24 @@ class GitComply:
             config_location = os.getenv( 'HOME' )
         configfile = os.path.join( config_location,'.gitcomply' )
         config.read(configfile)
-        self.config = { 'email': config.get( 'admin', 'email' ) }
-        self.args = args
+        try:
+            mailserver = config.get( 'env', 'mailserver' )
+        except ConfigParser.NoSectionError:
+            if self.args.email:
+                print 'No mailserver in your .gitcomply file'
+                sys.exit()
+            else:
+                mailserver = ''
+        try:
+            email = config.get( 'admin', 'email' )
+        except ConfigParser.NoSectionError:
+            if self.args.email:
+                print 'No email address in your .gitcomply file'
+                sys.exit()
+            else:
+                email = ''        
+        self.config = { 'email': email, 
+                        'mailserver': mailserver }
         self.repos = []
         self.warnings = []
         if self.args.directory:
@@ -86,6 +130,7 @@ class GitComply:
         self.mod_re = re.compile( r'modified:(.*)' )
         self.new_re = re.compile( r'Untracked files:.*\n#(\n#\t.*)no changes',
                                   re.DOTALL )
+
 
 class WarningFile:
     """Holds individual warnings"""
@@ -103,6 +148,9 @@ if __name__ == '__main__':
                         help="override default .gitcomply location" )
     parser.add_argument( '-d', '--directory',
                          help="directory in which to begin search" )
+    parser.add_argument( '-e', '--email',
+                         action='store_true',
+                         help="email the report to the admin user")
     parser.add_argument( '-r', '--recursive',
                          action='store_true',
                          help="check in all repos recursively" )
@@ -112,6 +160,7 @@ if __name__ == '__main__':
     gitcomply = GitComply( args )
 
     config_logger.debug( "email: %s" % gitcomply.config['email'] )
+    config_logger.debug( "mailserver: %s" % gitcomply.config['mailserver'] )    
 
     # Search for repos
     gitcomply.search()
@@ -124,3 +173,6 @@ if __name__ == '__main__':
     
     for warning in gitcomply.warnings:
         status_logger.debug( "warning: %s " % warning.filename )
+
+    gitcomply.report()
+    status_logger.debug( gitcomply.report )
