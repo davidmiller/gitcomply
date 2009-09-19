@@ -77,12 +77,36 @@ class GitComply:
         %s
         """
         file_tpl = """
-        repo: %(repo)s -- type: %(type)s -- file: %(filename)
+        repo: %(repo)s -- type %(type)s --file %(filename)s
+        """
+        mail_tpl = """
+        From: %(from)s
+        To: %(to)s
+        Subject: %(subject)s
+
+        %(message)s
         """
         file_lines = ""
+        
         for warning in self.warnings:
-            file_lines += warning.repo
+            values = { 'repo': warning.repo,
+                       'type': warning.type,
+                       'filename': warning.filename }
+            file_lines += file_tpl % values
         self.report = warnings_tpl % file_lines
+        print self.report
+        if self.args.email:
+            subject = "Uncommitted files found"
+            fromaddr = 'gitcomply@gitcomply.com'
+            toaddr = self.config['email']
+            server = smtplib.SMTP( self.config['mailserver'] )
+            msg_values = { 'from': fromaddr,
+                           'to': toaddr,
+                           'subject': subject,
+                           'message': self.report}
+            message = mail_tpl % msg_values
+            server.sendmail( fromaddr, toaddr, message )
+            server.quit()
         return self.report
 
 
@@ -168,4 +192,4 @@ if __name__ == '__main__':
         status_logger.debug( "warning: %s " % warning.filename )
 
     gitcomply.report()
-    status_logger.debug( gitcomply.report )
+#    report_logger.info( gitcomply.report )
