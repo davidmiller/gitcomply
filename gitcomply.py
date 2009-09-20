@@ -72,6 +72,12 @@ class GitComply:
 
     def report( self ):
         """Generates report of warning cases"""
+        
+        if len(self.warnings) == 0:
+            self.report = "Everything OK"
+            return self.report
+        
+        
         warnings_tpl = """
         Uncommitted files found!
         %s
