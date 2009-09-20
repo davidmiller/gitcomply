@@ -75,6 +75,7 @@ class GitComply:
         
         if len(self.warnings) == 0:
             self.report = "Everything OK"
+            print self.report
             return self.report
         
         
