@@ -118,6 +118,8 @@ class GitComply:
 
 
     def __init__( self, args ):
+
+        config_logger.debug(args)
         self.args = args
         config = ConfigParser.RawConfigParser()
         if args.configfile:
