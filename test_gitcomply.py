@@ -33,5 +33,19 @@ class MyTest( unittest.TestCase ):
             pass
 
 
+    def testEqual( self ):
+        args = argparse.Namespace( configfile=None,
+                                   directory=None,
+                                   email=False,
+                                   recursive=False )
+        gitcomply = GitComply( args )
+        try:
+            result = gitcomply.report()
+            expected = [ 'Everything OK' ]
+            self.assertEqual( result == expected )
+        finally:
+            pass
+
+
 if __name__ == '__main__':
     unittest.main()
